@@ -5,9 +5,12 @@ using UnityEngine;
 
 namespace YukimaruGames.Editor
 {
+    /// <remarks>
+    /// https://github.com/halak/unity-editor-icons
+    /// </remarks>
     internal sealed class BuiltinEditorIconRepository : IIconRepository, IDisposable
     {
-        private Dictionary<string, Texture> _textures;
+        private Dictionary<string, Texture> _textures = new();
 
         internal BuiltinEditorIconRepository()
         {
@@ -16,12 +19,10 @@ namespace YukimaruGames.Editor
 
         ~BuiltinEditorIconRepository()
         {
-            if (this is IDisposable self)
-            {
-                self.Dispose();
-            }
+            IDisposable self = this;
+            self.Dispose();
         }
-        
+
         Texture IIconRepository.GetIcon(string iconName)
         {
             return GetOrAdd(iconName);

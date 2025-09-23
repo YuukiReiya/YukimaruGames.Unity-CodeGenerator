@@ -11,15 +11,16 @@ namespace YukimaruGames.CodeGenerator.Domain
         /// テンプレートとして読み込むファイルのパス
         /// </summary>
         string TemplateFilePath { get; }
-        
+
         /// <summary>
         /// 生成先のファイルパス
         /// </summary>
         string GenerateFilePath { get; }
-        
+
         /// <summary>
         /// 文字列の置換ルール
         /// </summary>
-        IReadOnlyList<IReplacementRule> Rules { get; }
+        //IReadOnlyCollection<IReplacementRule> Rules { get; }
+        IReadOnlyDictionary<string, string> Rules { get; }
     }
 }

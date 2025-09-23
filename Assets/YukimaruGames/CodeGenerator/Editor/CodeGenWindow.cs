@@ -2,15 +2,23 @@ using System;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using YukimaruGames.CodeGenerator.Infrastructure;
 using YukimaruGames.Editor;
+using YukimaruGames.Editor.CodeGenerator;
+using YukimaruGames.Editor.CodeGenerator.View;
 
 namespace YukimaruGames.CodeGenerator
 {
-    public sealed class CodeGenWindow : EditorWindow
+    public sealed class CodeGenWindow : EditorWindow, IRectProvider
     {
         private IIconRepository _iconRepository;
+
+        private LoadFilePanel _loadFilePanel;
+
+        //private RulePanel _rulePanel;
+        private GenerateFilePanel _generateFilePanel;
         private Vector2 _scrollPosition;
-        
+
         private const string kToolName = "CodeGen";
 
         [MenuItem("YukimaruGames/" + kToolName)]
@@ -23,7 +31,7 @@ namespace YukimaruGames.CodeGenerator
         {
             using var scope = new GUILayout.ScrollViewScope(_scrollPosition);
             _scrollPosition = scope.scrollPosition;
-            
+
             DrawPanel();
         }
 
@@ -34,6 +42,13 @@ namespace YukimaruGames.CodeGenerator
         private void SetUp()
         {
             _iconRepository = new BuiltinEditorIconRepository();
+            _loadFilePanel = new LoadFilePanel(_iconRepository);
+
+            var config = new GenerationConfig();
+            config.Add(new TimestampReplacementRule());
+
+            _generateFilePanel = new GenerateFilePanel(_iconRepository, config, this);
+            //_rulePanel = new RulePanel(_iconRepository,);
         }
 
         private void TearDown()
@@ -41,7 +56,8 @@ namespace YukimaruGames.CodeGenerator
             var disposables = new object[]
             {
                 _iconRepository,
-
+                _loadFilePanel,
+                _generateFilePanel,
             }.OfType<IDisposable>();
 
             foreach (var disposer in disposables)
@@ -50,11 +66,16 @@ namespace YukimaruGames.CodeGenerator
             }
 
             _iconRepository = null;
+            _loadFilePanel = null;
+            _generateFilePanel = null;
         }
 
         private void DrawPanel()
         {
-            
+            _loadFilePanel.Show();
+            _generateFilePanel.Show();
         }
+
+        Rect IRectProvider.GetRect() => position;
     }
 }
