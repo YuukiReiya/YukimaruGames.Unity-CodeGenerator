@@ -5,12 +5,14 @@ using UnityEngine;
 using YukimaruGames.CodeGenerator.Infrastructure;
 using YukimaruGames.Editor;
 using YukimaruGames.Editor.CodeGenerator;
+using YukimaruGames.Editor.CodeGenerator.Infrastructure;
 using YukimaruGames.Editor.CodeGenerator.View;
 
 namespace YukimaruGames.CodeGenerator
 {
     public sealed class CodeGenWindow : EditorWindow, IRectProvider
     {
+        private GenerateItemRepository _itemRepository;
         private IIconRepository _iconRepository;
 
         private LoadFilePanel _loadFilePanel;
@@ -41,13 +43,16 @@ namespace YukimaruGames.CodeGenerator
 
         private void SetUp()
         {
+            //_itemRepository = new 
             _iconRepository = new BuiltinEditorIconRepository();
             _loadFilePanel = new LoadFilePanel(_iconRepository);
-
+            _itemRepository = new GenerateItemRepository();
+            
             var config = new GenerationConfig();
             config.Add(new TimestampReplacementRule());
+            _itemRepository.AddItem(config);
 
-            _generateFilePanel = new GenerateFilePanel(_iconRepository, config, this);
+            _generateFilePanel = new GenerateFilePanel(_itemRepository, _iconRepository, this);
             //_rulePanel = new RulePanel(_iconRepository,);
         }
 
