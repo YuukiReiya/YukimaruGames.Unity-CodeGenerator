@@ -69,17 +69,18 @@ namespace YukimaruGames.Editor
         
         private void Clear()
         {
-            foreach (var texture in _textures)
-            {
-                if (Application.isPlaying)
-                {
-                    UnityEngine.Object.Destroy(texture.Value);
-                }
-                else
-                {
-                    UnityEngine.Object.DestroyImmediate(texture.Value);
-                }
-            }
+            // ビルトインテクスチャはAssetsフォルダ(unity-package)内のテクスチャを直接参照しているためDestroyしなくていい.
+            // foreach (var texture in _textures)
+            // {
+            //     if (Application.isPlaying)
+            //     {
+            //         UnityEngine.Object.Destroy(texture.Value);
+            //     }
+            //     else
+            //     {
+            //         UnityEngine.Object.DestroyImmediate(texture.Value);
+            //     }
+            // }
 
             _textures?.Clear();
             _textures = null;

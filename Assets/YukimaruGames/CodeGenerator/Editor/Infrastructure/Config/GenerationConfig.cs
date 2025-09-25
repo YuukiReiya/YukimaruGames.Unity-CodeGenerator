@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
-using YukimaruGames.CodeGenerator.Domain;
+using YukimaruGames.Editor.CodeGenerator.Domain;
 
-namespace YukimaruGames.CodeGenerator.Infrastructure
+namespace YukimaruGames.Editor.CodeGenerator.Infrastructure
 {
     /// <summary>
     /// コード生成設定.

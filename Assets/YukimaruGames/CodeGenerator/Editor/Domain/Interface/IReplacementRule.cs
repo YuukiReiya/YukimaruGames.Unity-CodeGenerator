@@ -1,4 +1,4 @@
-namespace YukimaruGames.CodeGenerator.Domain
+namespace YukimaruGames.Editor.CodeGenerator.Domain
 {
     /// <summary>
     /// 文字列置換のインターフェイス

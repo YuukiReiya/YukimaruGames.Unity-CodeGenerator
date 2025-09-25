@@ -1,7 +1,6 @@
 using System.Collections;
-using YukimaruGames.CodeGenerator.Domain;
 
-namespace YukimaruGames.CodeGenerator.Infrastructure
+namespace YukimaruGames.Editor.CodeGenerator.Domain
 {
     internal interface IGenerateItemRepository
     {

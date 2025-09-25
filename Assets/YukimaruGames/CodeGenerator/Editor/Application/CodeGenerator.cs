@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using YukimaruGames.CodeGenerator.Domain;
+using YukimaruGames.Editor.CodeGenerator.Domain;
 
-namespace YukimaruGames.CodeGenerator.Application
+namespace YukimaruGames.Editor.CodeGenerator.Application
 {
     /// <summary>
     /// コード生成器

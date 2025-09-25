@@ -1,8 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
-using YukimaruGames.CodeGenerator.Domain;
-using YukimaruGames.CodeGenerator.Infrastructure;
 using YukimaruGames.Editor.CodeGenerator.Domain;
 
 namespace YukimaruGames.Editor.CodeGenerator.Infrastructure

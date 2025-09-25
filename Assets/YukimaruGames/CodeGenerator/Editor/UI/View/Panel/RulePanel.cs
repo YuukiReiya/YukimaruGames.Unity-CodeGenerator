@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using YukimaruGames.CodeGenerator.Domain;
+using YukimaruGames.Editor.CodeGenerator.Domain;
 
 namespace YukimaruGames.Editor.CodeGenerator.View
 {

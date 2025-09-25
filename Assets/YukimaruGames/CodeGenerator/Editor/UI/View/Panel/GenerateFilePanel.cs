@@ -3,9 +3,8 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
-using YukimaruGames.CodeGenerator.Domain;
-using YukimaruGames.CodeGenerator.Infrastructure;
 using YukimaruGames.Editor.CodeGenerator.Domain;
+using YukimaruGames.Editor.CodeGenerator.Infrastructure;
 
 namespace YukimaruGames.Editor.CodeGenerator.View
 {
@@ -13,90 +12,150 @@ namespace YukimaruGames.Editor.CodeGenerator.View
     {
         private readonly IGenerateItemRepository _itemRepository;
         private readonly IIconRepository _iconRepository;
-        private readonly IRectProvider _windowRectProvider;
-        private readonly Lazy<GUIStyle> _inputFieldStyleLazy;
+        private readonly Lazy<GUIStyle> _headerStyleLazy;
         private readonly Lazy<GUIContent> _deleteButtonContentLazy;
         private readonly ReorderableList _reorderableList;
-        
-        
-        private Rect _cachedRect;
-        private bool _shouldRecalculation = true;
+        private readonly Queue<int> _deleteQueue = new();
 
-        private const float InputFieldWidth = 200f;
-        private const float _buttonWidth = 50f;
+        private Vector2 _scrollPosition;
+
+
+        private const string Template = "Template";
+        private const string Generate = "Generate";
+        private const string Delete = "Delete";
         
         public event Action<string> OnEditTemplateFile;
         public event Action<string> OnEditGenerateFile;
         public event Action OnRemove;
 
-        internal GenerateFilePanel(IGenerateItemRepository itemRepository,IIconRepository iconRepository, IRectProvider windowRectProvider)
+        internal GenerateFilePanel(IGenerateItemRepository itemRepository,IIconRepository iconRepository)
         {
             _itemRepository = itemRepository;
             _iconRepository = iconRepository;
             _reorderableList = new ReorderableList(_itemRepository.Items, typeof(GenerateItem), true, true, true, true)
             {
-                drawElementCallback = null,
+                drawHeaderCallback = DrawHeader,
+                drawElementCallback = DrawItem,
+                onAddCallback = OnAddItem,
                 elementHeight = 20,
             };
-            _windowRectProvider = windowRectProvider;
-            _inputFieldStyleLazy = new Lazy<GUIStyle>(() =>
+            _headerStyleLazy = new Lazy<GUIStyle>(() =>
             {
-                return new GUIStyle(GUI.skin.textField);
+                var style = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter,
+                    fontStyle = FontStyle.Bold,
+                };
+                return style;
             });
             _deleteButtonContentLazy = new Lazy<GUIContent>(() => new GUIContent(string.Empty, iconRepository.GetIcon("d_TreeEditor.Trash")));
-            _cachedRect = _windowRectProvider.GetRect();
         }
 
         internal void Show()
         {
-            DrawHeader();
-            DrawConfig();
-        }
-
-        private void DrawHeader()
-        {
-            using var scope = new EditorGUILayout.HorizontalScope();
-            var content = new GUIStyle(EditorStyles.boldLabel);
-            content.alignment = TextAnchor.MiddleCenter;
-            content.fixedWidth = InputFieldWidth;
-            EditorGUILayout.LabelField("Template", content, GUILayout.Width(InputFieldWidth));
-            EditorGUILayout.LabelField("Generate", content, GUILayout.Width(InputFieldWidth));
-            EditorGUILayout.LabelField("Delete", content, GUILayout.Width(InputFieldWidth));
+            DrawScrollList();
+            DeleteIfNeeded();
         }
 
         private void DrawItem(Rect rect, int index, bool isActive, bool isFocused)
         {
-            var item = _itemRepository.Items[index];
+            var item = _itemRepository.Items[index] as GenerateItem;
+
+            var deleteButtonRect = MakePaddingRect(rect);
+            MaterializeDeleteButtonRect(ref deleteButtonRect);
             
-            // 削除ボタン.
+            var templateRect = MakePaddingRect(rect);
+            MaterializeTemplateRect(ref templateRect);
+
+            var generateRect = MakePaddingRect(rect);
+            MaterializeGenerateRect(ref generateRect, templateRect);
+
+            // 削除
+            if (GUI.Button(deleteButtonRect, _deleteButtonContentLazy.Value))
+            {
+                _deleteQueue.Enqueue(index);
+            }
+            
+            // テンプレート
+            var newTemplateFilePath = EditorGUI.TextField(templateRect, item!.TemplateFile);
+            if (item.TemplateFile != newTemplateFilePath)
+            {
+                item.TemplateFile = newTemplateFilePath;
+            }
+            
+            // 書き出しファイル
+            var newGenerateFile = EditorGUI.TextField(generateRect, item.GenerateFile);
+            if (item.GenerateFile != newGenerateFile)
+            {
+                item.GenerateFile = newGenerateFile;
+            }
         }
-        
-        private void DrawConfig()
+
+        private void DrawHeader(Rect rect)
         {
-            // using var scope = new EditorGUILayout.HorizontalScope();
-            // var newText = EditorGUILayout.TextField(_config.TemplateFilePath, GUILayout.Width(InputFieldWidth));
-            // if (_config.TemplateFilePath != newText)
-            // {
-            //     OnEditTemplateFile?.Invoke(newText);
-            // }
-            //
-            // newText =  EditorGUILayout.TextField(_config.GenerateFilePath, GUILayout.Width(InputFieldWidth));
-            // if (_config.GenerateFilePath != newText)
-            // {
-            //     OnEditGenerateFile?.Invoke(newText);
-            // }
-            //
-            // if (GUILayout.Button("X", GUILayout.Width(InputFieldWidth)))
-            // {
-            //     OnRemove?.Invoke();
-            // }
+            var templateRect = MakePaddingRect(rect);
+            MaterializeTemplateRect(ref templateRect);
+
+            var generateRect = MakePaddingRect(rect);
+            MaterializeGenerateRect(ref generateRect, templateRect);
+
+            var deleteButtonRect = MakePaddingRect(rect);
+            MaterializeDeleteButtonRect(ref deleteButtonRect);
+
+            EditorGUI.LabelField(templateRect, Template, _headerStyleLazy.Value);
+            EditorGUI.LabelField(generateRect, Generate, _headerStyleLazy.Value);
+            EditorGUI.LabelField(deleteButtonRect, Delete, _headerStyleLazy.Value);
+        }
+
+        private void DrawScrollList()
+        {
+            using var scope = new EditorGUILayout.ScrollViewScope(_scrollPosition);
+            _scrollPosition = scope.scrollPosition;
+            _reorderableList.DoLayoutList();
+        }
+
+        private void DeleteIfNeeded()
+        {
+            while (0 < _deleteQueue.Count)
+            {
+                var index = _deleteQueue.Dequeue();
+                _itemRepository.Items.RemoveAt(index);
+            }
+        }
+
+        private Rect MakePaddingRect(in Rect rect)
+        {
+            const int padding = 2;
+            return new Rect(
+                rect.x + padding,
+                rect.y + padding,
+                rect.width - padding * 2,
+                rect.height - padding * 2
+            );
         }
         
-        // private void Recalculate()
-        // {
-        //     _openButtonTextSize = CalcCompactButtonTextSize();
-        //     _closeButtonTextSize = CalcFullButtonTextSize();
-        //     _shouldRecalculation = false;
-        // }
+        private void MaterializeTemplateRect(ref Rect paddingRect)
+        {
+            paddingRect.width *= 0.45f;
+        }
+
+        private void MaterializeGenerateRect(ref Rect paddingRect,in Rect templateRect)
+        {
+            const int space = 4;
+            paddingRect.x = templateRect.x + templateRect.width + space;
+            paddingRect.width = templateRect.width;
+        }
+        
+        private void MaterializeDeleteButtonRect(ref Rect paddingRect)
+        {
+            const float width = 50;
+            paddingRect.x += paddingRect.width - width;
+            paddingRect.width = width;
+        }
+        
+        private void OnAddItem(ReorderableList _)
+        {
+            _itemRepository.AddItem(new GenerationConfig());
+        }
     }
 }

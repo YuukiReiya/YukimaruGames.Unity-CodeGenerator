@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace YukimaruGames.CodeGenerator.Domain
+namespace YukimaruGames.Editor.CodeGenerator.Domain
 {
     /// <summary>
     /// 基本設定インターフェイス

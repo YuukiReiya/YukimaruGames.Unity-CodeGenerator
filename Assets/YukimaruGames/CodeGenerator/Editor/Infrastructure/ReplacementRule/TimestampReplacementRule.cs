@@ -1,7 +1,7 @@
 using System;
-using YukimaruGames.CodeGenerator.Domain;
+using YukimaruGames.Editor.CodeGenerator.Domain;
 
-namespace YukimaruGames.CodeGenerator.Infrastructure
+namespace YukimaruGames.Editor.CodeGenerator.Infrastructure
 {
     /// <summary>
     /// 文字列のタイムスタンプ置換
